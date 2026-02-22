@@ -1,0 +1,12 @@
+google-generativeai
+langgraph
+langchain-core
+moviepy
+elevenlabs
+pydub
+streamlit
+python-dotenv
+opencv-python
+Pillow
+pydantic
+edge-tts
