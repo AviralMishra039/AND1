@@ -104,21 +104,16 @@ def generate_voice_audio(text: str, persona: str, output_path: str):
             print(f"Retry failed too. Using offline voice: {retry_e}")
             fallback_tts(text, persona, output_path)
 
-def adjust_video_duration(video_path: str, target_seconds: float = 30.0) -> VideoFileClip:
-    """Trim video if it exceeds target_seconds, otherwise keep original length."""
-    clip = VideoFileClip(video_path)
-    if clip.duration > target_seconds:
-        print(f"Video exceeded {target_seconds}s (trimming down).")
-        clip = clip.subclip(0, target_seconds)
-    else:
-        print(f"Video is {clip.duration:.1f}s, which is fine (under or equal to 30s).")
-        
-    return clip
-
 def assemble_final_video(video_path: str, commentary_segments: List[Dict], output_path: str, temp_dir: str):
     """Overlay audio with precise ducking and export the final video."""
     # Ensure standard duration
-    video_clip = adjust_video_duration(video_path, 30.0)
+    video_clip_orig = VideoFileClip(video_path)
+    if video_clip_orig.duration > 30.0:
+        print(f"Video exceeded 30.0s (trimming down).")
+        video_clip = video_clip_orig.subclip(0, 30.0)
+    else:
+        print(f"Video is {video_clip_orig.duration:.1f}s, which is fine (under or equal to 30s).")
+        video_clip = video_clip_orig
     
     # Extract original audio to pydub
     original_audio_path = os.path.join(temp_dir, "original_audio.wav")
@@ -186,11 +181,13 @@ def assemble_final_video(video_path: str, commentary_segments: List[Dict], outpu
     final_mix_path = os.path.join(temp_dir, "final_mix.wav")
     final_audio.export(final_mix_path, format="wav")
     
-    mixed_audio_clip = AudioFileClip(final_mix_path)
+    mixed_audio_clip_orig = AudioFileClip(final_mix_path)
     
     # Ensure audio duration does not extend past video duration (cut off cleanly)
-    if mixed_audio_clip.duration > video_clip.duration:
-        mixed_audio_clip = mixed_audio_clip.subclip(0, video_clip.duration)
+    if mixed_audio_clip_orig.duration > video_clip.duration:
+        mixed_audio_clip = mixed_audio_clip_orig.subclip(0, video_clip.duration)
+    else:
+        mixed_audio_clip = mixed_audio_clip_orig
         
     final_video = video_clip.set_audio(mixed_audio_clip)
     
@@ -203,3 +200,12 @@ def assemble_final_video(video_path: str, commentary_segments: List[Dict], outpu
         logger=None,
         fps=fps_to_use
     )
+    
+    # Explicitly close all clips to release Windows file handles
+    final_video.close()
+    video_clip.close()
+    if video_clip != video_clip_orig:
+        video_clip_orig.close()
+    mixed_audio_clip.close()
+    if mixed_audio_clip != mixed_audio_clip_orig:
+        mixed_audio_clip_orig.close()
