@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoopVoice AI | Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@800;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body class="app-body">
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="index.html" class="nav-btn btn-white" style="text-decoration: none;">← Back Home</a>
+        </div>
+        <div class="nav-center">
+            <h1 class="logo"><span>✺</span> HOOPVOICE-AI</h1>
+        </div>
+        <div class="nav-right">
+            <!-- Empty to balance nav -->
+        </div>
+    </nav>
+
+    <main class="dashboard-section">
+        <div class="dashboard-header">
+            <h2>AI Broadcasting Studio</h2>
+            <p>Upload a clip and let the LangGraph Engine call the game.</p>
+        </div>
+
+        <section class="interaction-grid dashboard-grid">
+            <!-- Step 1: Upload -->
+            <div class="card card-dark">
+                <div class="card-header">
+                    <span class="step-label">Step 1</span>
+                    <div class="line"></div>
+                </div>
+                <div class="card-body">
+                    <h3>Upload raw<br>basketball clip</h3>
+                    <div class="upload-controls">
+                        <label for="video-upload" class="upload-btn">Select Video File</label>
+                        <input type="file" id="video-upload" accept="video/mp4" hidden>
+                        <span id="file-name" class="file-name">No file selected</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Persona -->
+            <div class="card card-orange">
+                <div class="card-header">
+                    <span class="step-label">Step 2</span>
+                    <div class="line line-orange"></div>
+                </div>
+                <div class="card-body row-body">
+                    <h3>Which commentator<br>do you need?</h3>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <span>The Hype Man</span>
+                            <input type="radio" name="persona" value="hype" checked>
+                        </label>
+                        <label class="radio-option">
+                            <span>The Analyst</span>
+                            <input type="radio" name="persona" value="analytical">
+                        </label>
+                        <label class="radio-option">
+                            <span>The Roaster</span>
+                            <input type="radio" name="persona" value="roaster">
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Generate -->
+            <div class="card card-light" id="generate-card">
+                <div class="card-header">
+                    <span class="step-label">Step 3</span>
+                    <div class="line line-light"></div>
+                </div>
+                <div class="card-body generate-body">
+                    <h3>Generate Highlight<br>Reel → 🎬</h3>
+                    <p class="status-text" id="status-text">Click to start AI engine</p>
+                    <div class="progress-bar-container" id="progress-container">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                    <video id="output-video" controls
+                        style="display: none; width: 100%; border-radius: 10px; margin-top: 1.5rem;"></video>
+
+                    <!-- Logs Container -->
+                    <div id="logs-container" style="display: none; margin-top: 1.5rem; text-align: left;">
+                        <button id="toggle-scout" class="btn-outline"
+                            style="width: 100%; border: 1px solid #ddd; color: var(--dark); margin-bottom: 0.5rem;">Toggle
+                            Scout Logs</button>
+                        <pre id="scout-logs"
+                            style="display: none; background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 8px; font-size: 0.85rem; overflow-x: auto; max-height: 200px;"></pre>
+
+                        <button id="toggle-writer" class="btn-outline"
+                            style="width: 100%; border: 1px solid #ddd; color: var(--dark); margin-bottom: 0.5rem;">Toggle
+                            Writer Script</button>
+                        <pre id="writer-logs"
+                            style="display: none; background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 8px; font-size: 0.85rem; overflow-x: auto; max-height: 200px;"></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
