@@ -8,10 +8,21 @@ HoopVoice AI is an end-to-end, stateful multi-agent system that autonomously gen
 ##  The Vision
 In a world where 99% of sports are played in silence, HoopVoice AI democratizes the professional broadcast experience. Whether it's a high school tournament or a pickup game at the park, our system uses Multimodal Agentic AI to understand the narrative, track the momentum, and speak the language of the game.
 
-###  Live Demo Output
-<video src="https://raw.githubusercontent.com/AviralMishra039/AND1/assets/output_hoopvoice.mp4" controls="controls" style="max-height: 640px; border-radius: 8px;">
-If the video doesn't play automatically, <a href="assets/output_hoopvoice.mp4">download the demo here</a>.
-</video>
+### 🎥 Side-by-Side Comparison
+<table style="width: 100%; text-align: center; border: none;">
+  <tr>
+    <th style="width: 50%;">Original Raw Video</th>
+    <th style="width: 50%;">HoopVoice AI Output</th>
+  </tr>
+  <tr>
+    <td>
+      <video src="https://raw.githubusercontent.com/AviralMishra039/AND1/main/assets/Putback%20Dunk%20%EF%BD%9C%EF%BD%9C%20All%20India%20Inter%20University%20Basketball%20%23fiba%20%23fibaasiacup%20%23unitedcollege%20%23shortsfeed%20%5BpWxnVoga9jo%5D.mp4" controls="controls" style="max-height: 480px; width: 100%; border-radius: 8px;"></video>
+    </td>
+    <td>
+      <video src="https://raw.githubusercontent.com/AviralMishra039/AND1/main/assets/output_hoopvoice.mp4" controls="controls" style="max-height: 480px; width: 100%; border-radius: 8px;"></video>
+    </td>
+  </tr>
+</table>
 
 ##  Tech Stack
 - **Vision Engine**: Gemini 2.5 Flash (Multimodal event extraction & synchronized timestamping)
@@ -48,3 +59,6 @@ hoopvoice-ai/
 3. Ensure **FFmpeg** is installed and accessible in your system PATH.
 4. Run the Streamlit orchestrator: `streamlit run hoopvoice-ai/app.py`
 5. Upload an `.mp4` basketball clip and select your desired announcer persona!
+
+## Note
+I have not yet deployed the app, but I will soon!
