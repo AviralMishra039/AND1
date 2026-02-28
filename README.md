@@ -9,20 +9,9 @@ HoopVoice AI is an end-to-end, stateful multi-agent system that autonomously gen
 In a world where 99% of sports are played in silence, HoopVoice AI democratizes the professional broadcast experience. Whether it's a high school tournament or a pickup game at the park, our system uses Multimodal Agentic AI to understand the narrative, track the momentum, and speak the language of the game.
 
 ### 🎥 Side-by-Side Comparison
-<table style="width: 100%; text-align: center; border: none;">
-  <tr>
-    <th style="width: 50%;">Original Raw Video</th>
-    <th style="width: 50%;">HoopVoice AI Output</th>
-  </tr>
-  <tr>
-    <td>
-      <video src="https://raw.githubusercontent.com/AviralMishra039/AND1/main/assets/Putback%20Dunk%20%EF%BD%9C%EF%BD%9C%20All%20India%20Inter%20University%20Basketball%20%23fiba%20%23fibaasiacup%20%23unitedcollege%20%23shortsfeed%20%5BpWxnVoga9jo%5D.mp4" controls="controls" style="max-height: 480px; width: 100%; border-radius: 8px;"></video>
-    </td>
-    <td>
-      <video src="https://raw.githubusercontent.com/AviralMishra039/AND1/main/assets/output_hoopvoice.mp4" controls="controls" style="max-height: 480px; width: 100%; border-radius: 8px;"></video>
-    </td>
-  </tr>
-</table>
+| Original Raw Video | HoopVoice AI Output |
+| :---: | :---: |
+| <video src="https://raw.githubusercontent.com/AviralMishra039/AND1/main/assets/Putback%20Dunk%20%EF%BD%9C%EF%BD%9C%20All%20India%20Inter%20University%20Basketball%20%23fiba%20%23fibaasiacup%20%23unitedcollege%20%23shortsfeed%20%5BpWxnVoga9jo%5D.mp4" controls="controls" width="100%"></video> | <video src="https://raw.githubusercontent.com/AviralMishra039/AND1/main/assets/output_hoopvoice.mp4" controls="controls" width="100%"></video> |
 
 ##  Tech Stack
 - **Vision Engine**: Gemini 2.5 Flash (Multimodal event extraction & synchronized timestamping)
