@@ -12,10 +12,9 @@
 ##  The Vision
 In a world where 99% of sports are played in silence, HoopVoice AI democratizes the professional broadcast experience. Whether it's a high school tournament or a pickup game at the park, our system uses Multimodal Agentic AI to understand the narrative, track the momentum, and speak the language of the game.
 
-### 🎥 Side-by-Side Comparison
-| Original Raw Video | HoopVoice AI Output |
-| :---: | :---: |
-| <video src="https://github.com/AviralMishra039/AND1/raw/main/assets/original_video.mp4" controls="controls" width="100%"></video> | <video src="https://github.com/AviralMishra039/AND1/raw/main/assets/output_hoopvoice.mp4" controls="controls" width="100%"></video> |
+### 🎥 Live Demo Output
+- **[Download / View Original Raw Video](https://github.com/AviralMishra039/AND1/raw/main/assets/original_video.mp4)**
+- **[Download / View HoopVoice AI Output](https://github.com/AviralMishra039/AND1/raw/main/assets/output_hoopvoice.mp4)**
 
 ##  Tech Stack
 - **Vision Engine**: Gemini 2.5 Flash (Multimodal event extraction & synchronized timestamping)
