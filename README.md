@@ -8,6 +8,11 @@ HoopVoice AI is an end-to-end, stateful multi-agent system that autonomously gen
 ##  The Vision
 In a world where 99% of sports are played in silence, HoopVoice AI democratizes the professional broadcast experience. Whether it's a high school tournament or a pickup game at the park, our system uses Multimodal Agentic AI to understand the narrative, track the momentum, and speak the language of the game.
 
+###  Live Demo Output
+<video src="https://raw.githubusercontent.com/AviralMishra039/AND1/assets/output_hoopvoice.mp4" controls="controls" style="max-height: 640px; border-radius: 8px;">
+If the video doesn't play automatically, <a href="assets/output_hoopvoice.mp4">download the demo here</a>.
+</video>
+
 ##  Tech Stack
 - **Vision Engine**: Gemini 2.5 Flash (Multimodal event extraction & synchronized timestamping)
 - **Orchestration**: LangGraph (Stateful Agentic workflow)
@@ -15,6 +20,8 @@ In a world where 99% of sports are played in silence, HoopVoice AI democratizes 
 - **Voice Synthesis**: ElevenLabs (Emotive TTS with Python SDK & pyttsx3 offline fallback)
 - **AV Processing**: MoviePy & Pydub (Audio ducking, timeline alignment, and sync)
 - **UI/UX**: Streamlit (Interactive dashboard)
+
+
 
 ##  Agentic Architecture
 Unlike simple "video-to-text" tools, HoopVoice uses a Stateful Pipeline:
