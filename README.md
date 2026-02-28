@@ -1,5 +1,9 @@
 # 🏀 HoopVoice AI: The Voice of the Local Court
-HoopVoice AI is an end-to-end, stateful multi-agent system that autonomously generates professional-grade, personality-driven commentary for amateur basketball footage. By bridging the gap between raw video and professional broadcasting, we turn every local game into a "Sportscenter" highlight reel.
+
+![UI](assets/hoopvoice_ui.png)
+![UI](assets/hoopvoice_ui_2.png)
+
+### HoopVoice AI is an end-to-end, stateful multi-agent system that autonomously generates professional-grade, personality-driven commentary for amateur basketball footage. By bridging the gap between raw video and professional broadcasting, we turn every local game into a "Sportscenter" highlight reel.
 
 ## Team: AND1  
 - **Member**: Aviral Mishra
