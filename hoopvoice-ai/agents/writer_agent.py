@@ -1,29 +1,50 @@
-import os
-from typing import Dict, List
-import google.generativeai as genai
-from pydantic import ValidationError
+import json
 
+from google.genai import types
+
+from clients.gemini_client import generate_content, make_cache_key
+from observability.tracing import observe
+from utils.config import (
+    MOCK_LLM,
+    PROMPT_VERSION,
+    WRITER_FALLBACK_MODEL,
+    WRITER_MODEL,
+)
 from utils.schemas import WriterOutput
 
-def initialize_gemini():
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise ValueError("GEMINI_API_KEY not found in environment variables.")
-    genai.configure(api_key=api_key)
 
-def generate_commentary(writer_input: Dict) -> dict:
+@observe(name="writer")
+def generate_commentary(writer_input: dict) -> dict:
     """Takes events and context and generates SSML commentary matching the persona."""
-    initialize_gemini()
-    
     events = writer_input.get("events", [])
     persona = writer_input.get("persona", "hype")
     context = writer_input.get("context", "")
     clip_duration = writer_input.get("clip_duration_seconds", 30.0)
-    
+
+    if MOCK_LLM:
+        return WriterOutput.model_validate({
+            "commentary_segments": [
+                {
+                    "timestamp_seconds": events[0]["timestamp_seconds"] if events else 0.5,
+                    "persona": persona,
+                    "script": "Mock: OH MY GOODNESS, what a play!",
+                    "ssml": "<speak>Mock: <emphasis level='strong'>OH MY GOODNESS</emphasis>, what a play!</speak>",
+                    "duration_hint_seconds": 3.0,
+                },
+                {
+                    "timestamp_seconds": events[-1]["timestamp_seconds"] if len(events) > 1 else 8.0,
+                    "persona": persona,
+                    "script": "Mock: He is heating up, folks.",
+                    "ssml": "<speak>Mock: He is heating up, folks.</speak>",
+                    "duration_hint_seconds": 2.5,
+                },
+            ]
+        }).model_dump()
+
     if not events:
         # Fallback if no major plays detected
         return WriterOutput(commentary_segments=[{
-            "timestamp_seconds": 0.5, # Right at the start of video
+            "timestamp_seconds": 0.5,  # Right at the start of video
             "persona": persona,
             "script": "No major plays detected in this run. It's a quiet stretch.",
             "ssml": "<speak><prosody rate='medium'>No major plays detected in this run. It's a quiet stretch.</prosody></speak>",
@@ -36,65 +57,73 @@ def generate_commentary(writer_input: Dict) -> dict:
         "analytical": "Calm, ESPN-style, tactical. Use measured pace with <prosody rate='medium'> and focus on facts.",
         "roaster": "Savage, funny, trash-talk. Use dramatic pauses like <break time='500ms'/>, sarcasm, and slow <prosody rate='slow'> for impact."
     }
-    
+
     rule = persona_rules.get(persona, persona_rules["analytical"])
-    
-    model = genai.GenerativeModel("gemini-2.5-flash")
-    
+
     prompt = f"""
     You are a professional basketball commentator. Your persona is "{persona}":
     {rule}
-    
+
     Context: {context}
     The total video is ONLY {clip_duration:.1f} seconds long.
-    
+
     You must output exactly one commentary segment per event provided below.
-    CRITICAL CONSTRAINT: You MUST keep your script short enough so it finishes BEFORE the video ends! 
-    A normal speaking rate is 2.5 words per second. 
+    CRITICAL CONSTRAINT: You MUST keep your script short enough so it finishes BEFORE the video ends!
+    A normal speaking rate is 2.5 words per second.
     Count your words. If an event happens at {clip_duration - 2.0:.1f}s on a {clip_duration:.1f}s video, your script CANNOT be more than 4 words!
-    
+
     Make sure your SSML is completely valid (no unclosed tags) and enclosed in <speak>.
     Calculate `duration_hint_seconds` roughly as word count divided by 2.5.
-    
+
     Events to cover:
     """
-    
+
     for i, event in enumerate(events):
         prompt += f"\n- [{event['timestamp_seconds']}s] Type: {event['play_type']} | Desc: {event['description']} | Intensity: {event['intensity']}"
-        
+
     prompt += """
-    
-    Output exactly in this JSON format:
-    {
-      "commentary_segments": [
-        {
-          "timestamp_seconds": 4.5,
-          "persona": "hype",
-          "script": "Plain text version",
-          "ssml": "<speak>...</speak>",
-          "duration_hint_seconds": 3.5
-        }
-      ]
-    }
+
+    Return the result as JSON matching the provided response schema (WriterOutput):
+    commentary_segments, exactly one per event, each with timestamp_seconds, persona,
+    script, ssml and duration_hint_seconds.
     """
-    
+
+    config = types.GenerateContentConfig(
+        response_mime_type="application/json",
+        response_schema=WriterOutput,
+    )
+
+    cache_key = make_cache_key(
+        "writer", PROMPT_VERSION, WRITER_MODEL, persona, context,
+        json.dumps(events, sort_keys=True), clip_duration,
+    )
+
     try:
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                response_mime_type="application/json",
-            )
+        output_txt = generate_content(
+            model=WRITER_MODEL,
+            contents=prompt,
+            config=config,
+            area="writer",
+            cache_key=cache_key,
         )
-        
-        output_txt = response.text
-        writer_data = WriterOutput.model_validate_json(output_txt)
-        return writer_data.model_dump()
-        
-    except Exception as e:
-        print(f"Writer Agent error: {e}")
-        # Fallback 
+        return WriterOutput.model_validate_json(output_txt).model_dump()
+    except Exception as primary_error:
+        print(f"Writer Agent error on {WRITER_MODEL}: {primary_error}")
+        if WRITER_FALLBACK_MODEL and WRITER_FALLBACK_MODEL != WRITER_MODEL:
+            try:
+                print(f"Writer Agent retrying on fallback model {WRITER_FALLBACK_MODEL}...")
+                output_txt = generate_content(
+                    model=WRITER_FALLBACK_MODEL,
+                    contents=prompt,
+                    config=config,
+                    area="writer-fallback",
+                )
+                return WriterOutput.model_validate_json(output_txt).model_dump()
+            except Exception as fallback_error:
+                print(f"Writer Agent fallback model also failed: {fallback_error}")
+        # Final canned fallback
         return WriterOutput(commentary_segments=[{
-            "timestamp_seconds": events[0]['timestamp_seconds'] if events else 0.5,
+            "timestamp_seconds": events[0]["timestamp_seconds"] if events else 0.5,
             "persona": persona,
             "script": "Wow, what a play!",
             "ssml": "<speak>Wow, what a play!</speak>",

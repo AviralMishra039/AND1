@@ -1,5 +1,6 @@
 from typing import TypedDict, List, Dict
 from langgraph.graph import StateGraph, END
+from agents.analyst_agent import compute_game_metrics
 from agents.scout_agent import analyze_video
 from agents.writer_agent import generate_commentary
 
@@ -30,32 +31,8 @@ def ingest_events(state: GameState) -> GameState:
     return state
 
 def analyze_momentum(state: GameState) -> GameState:
-    """Calculate momentum and trends from events."""
-    events = state.get("events", [])
-    
-    intensity_trend = [event.get("intensity", 5) for event in events][-5:]
-    state["intensity_trend"] = intensity_trend
-    
-    # Calculate simple momentum based on trend slope
-    if len(intensity_trend) >= 2:
-        if intensity_trend[-1] > intensity_trend[0]:
-            state["momentum"] = "rising"
-        elif intensity_trend[-1] < intensity_trend[0]:
-            state["momentum"] = "falling"
-        else:
-            state["momentum"] = "neutral"
-    else:
-        state["momentum"] = "neutral"
-        
-    # Calculate streak and dominant play type (simplified)
-    state["scoring_streak"] = sum(1 for e in events if e.get("play_type") in ["dunk", "three_pointer"])
-    
-    play_types = [e.get("play_type", "other") for e in events]
-    if play_types:
-        state["dominant_play_type"] = max(set(play_types), key=play_types.count)
-    else:
-        state["dominant_play_type"] = "none"
-        
+    """Calculate momentum and trends from events (logic lives in agents/analyst_agent.py)."""
+    state.update(compute_game_metrics(state.get("events", [])))
     return state
 
 def build_writer_input(state: GameState) -> GameState:
