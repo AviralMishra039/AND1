@@ -115,13 +115,13 @@ hoopvoice-ai/
   - `run_evals.py` runs the suite, logs scores to a Langfuse dataset run.
 - **Acceptance:** `python -m evals.run_evals` prints a scorecard and every metric is visible in Langfuse.
 
-### Phase 4 — Live Mode (D6)
+### Phase 4 — Live Mode (D6) — ⏸ SKIPPED (requires Gemini Live API access; only the free AI Studio key is available. Revisit if access changes.)
 - `live/live_session.py`: Live API session (native-audio model; name from config — verify current name at build time). Two input modes: **webcam** (real demo) and **simulated-live** (stream an mp4's frames at real-time pace — same wow, no camera needed, also used for evals).
 - Browser: WS bridge in `fastapi_app.py`; simple "Go Live" page in the frontend; commentary audio plays live in the browser.
 - Free-tier reality: sessions are capped (short 30–60s demos; one session at a time). Document this; simulated-live mode keeps demos deterministic.
 - **Acceptance:** 30s webcam session produces intelligible real-time commentary in-browser; graceful error when session quota is exhausted.
 
-### Phase 5 — Polish
+### Phase 5 — Polish — ✅ COMPLETE (README rewritten; pyproject/requirements/uv.lock reconciled — `uv sync` now safe, prunes orphans; full eval suite green on upgraded stack with 0 API calls)
 - Update `README.md` (architecture, Booth/Live modes, evals section, new run instructions) and this plan's checkboxes.
 - Root `requirements.txt` / `pyproject.toml` reconciliation.
 
@@ -142,6 +142,6 @@ Crowd SFX/music, multi-language picker, player jersey tracking, highlight auto-c
 
 ---
 
-### Execution order summary
-**P0 SDK/plumbing → P1 native video scout → P2 booth + Gemini TTS → P3 tracing + evals → P4 Live → P5 docs.**
-Each phase ends green and demo-able on its own; every phase after P0 routes all Google calls through the cached central client.
+### Execution order summary — MODERNIZATION COMPLETE
+**P0 SDK/plumbing ✅ → P1 native video scout ✅ → P2 booth + Gemini TTS ✅ → P3 tracing + evals ✅ → P4 Live ⏸ skipped (no API access) → P5 polish ✅**
+Each phase ended green and demo-able on its own; all Gemini traffic routes through the cached central client. Remaining backlog: Phase 4 (if Live API access arrives), more golden clips + human-verified labels, Langfuse cloud keys, deployment.

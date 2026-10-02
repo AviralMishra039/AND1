@@ -2,6 +2,8 @@ google-genai
 langgraph
 langchain-core
 moviepy>=2.0
+audioop-lts
+imageio-ffmpeg
 pydub
 streamlit
 python-dotenv

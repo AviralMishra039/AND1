@@ -1,12 +1,24 @@
 [project]
 name = "and1"
 version = "0.1.0"
-description = "Add your description here"
+description = "HoopVoice AI - autonomous two-voice commentary for amateur basketball footage"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "audioop-lts>=0.2.2",
-    "imageio-ffmpeg>=0.6.0",
-    "pyttsx3>=2.99",
-    "setuptools>=82.0.0",
+    "audioop-lts>=0.2.2,<0.3",
+    "edge-tts>=7.2,<8",
+    "fastapi>=0.131,<1",
+    "google-genai>=2.25,<3",
+    "imageio-ffmpeg>=0.6,<0.7",
+    "langchain-core>=1.2,<2",
+    "langfuse>=4.15,<5",
+    "langgraph>=1.0,<2",
+    "moviepy>=2.2,<3",
+    "pillow>=11,<12",
+    "pydantic>=2.12,<3",
+    "pydub>=0.25.1,<0.26",
+    "python-dotenv>=1.2,<2",
+    "python-multipart>=0.0.22,<0.1",
+    "streamlit>=1.54,<2",
+    "uvicorn>=0.41,<1",
 ]
