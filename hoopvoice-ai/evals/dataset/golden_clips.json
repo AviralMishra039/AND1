@@ -1,0 +1,19 @@
+{
+  "dataset_name": "hoopvoice-golden-clips",
+  "description": "Golden clips + labels for HoopVoice evals. Current labels are model-derived (Gemini 2.5 Flash native video) and pending human verification. Add clips by dropping files into assets/ and extending 'clips'.",
+  "clips": [
+    {
+      "name": "original_clip",
+      "path": "assets/original_video.mp4",
+      "persona": "roaster",
+      "clip_duration_seconds": 17.8,
+      "label_source": "model-derived (Gemini 2.5 Flash native video), pending human verification",
+      "golden_events": [
+        {"timestamp_seconds": 1.5, "play_type": "miss"},
+        {"timestamp_seconds": 2.1, "play_type": "other"},
+        {"timestamp_seconds": 10.1, "play_type": "miss"},
+        {"timestamp_seconds": 13.0, "play_type": "dunk"}
+      ]
+    }
+  ]
+}

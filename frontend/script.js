@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 "1. Uploading video to server...",
                 "2. Analyzing Game Momentum...",
                 "3. Writing Commentary Script...",
-                "4. Generating Audio via Edge-TTS...",
+                "4. Generating Booth Audio (Gemini TTS)...",
                 "5. Assembling Final Video..."
             ];
 

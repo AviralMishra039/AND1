@@ -4,7 +4,7 @@ from google.genai import types
 
 from clients.gemini_client import generate_content, get_or_upload_video, make_cache_key
 from observability.tracing import observe
-from utils.config import MOCK_LLM, PROMPT_VERSION, SCOUT_MODEL
+from utils.config import MOCK_LLM, SCOUT_MODEL, SCOUT_PROMPT_VERSION
 from utils.schemas import ScoutOutput
 
 
@@ -64,7 +64,7 @@ def analyze_video(video_path: str) -> dict:
         response_mime_type="application/json",
         response_schema=ScoutOutput,
     )
-    cache_key = make_cache_key("scout", PROMPT_VERSION, SCOUT_MODEL, video_hash)
+    cache_key = make_cache_key("scout", SCOUT_PROMPT_VERSION, SCOUT_MODEL, video_hash)
 
     try:
         video_file = get_or_upload_video(video_path, video_hash)

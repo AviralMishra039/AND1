@@ -4,7 +4,7 @@ from typing import List, Dict
 from moviepy import VideoFileClip, AudioFileClip
 from pydub import AudioSegment
 
-from engine.tts_engine import generate_voice_audio
+from engine.tts_engine import render_segment
 from observability.tracing import observe
 from utils.config import TTS_MAX_SEGMENTS
 from utils.helpers import calculate_audio_duration, test_duration_calculation  # noqa: F401 (re-exported for app.py)
@@ -46,12 +46,16 @@ def assemble_final_video(video_path: str, commentary_segments: List[Dict], outpu
             print(f"[budget] Skipping TTS for segment {i} (cap is {TTS_MAX_SEGMENTS}).")
             continue
 
-        ssml_script = seg.get("ssml", "")
-        persona = seg.get("persona", "hype")
+        turns = seg.get("turns") or []
+        if not turns:
+            print(f"Segment {i} has no turns, skipping.")
+            continue
+
+        color_persona = seg.get("persona", "analytical")
         start_time_sec = seg.get("timestamp_seconds", 0)
 
         chunk_path = os.path.join(temp_dir, f"comm_audio_{i}.wav")
-        generate_voice_audio(ssml_script, persona, chunk_path)
+        render_segment(turns, color_persona, chunk_path)
 
         # Load generated commentary via pydub
         try:

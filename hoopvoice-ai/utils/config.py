@@ -27,7 +27,7 @@ CACHE_DIR = BASE_DIR / "cache"
 # --- Models (verify names after any change: python verify_models.py) ---
 SCOUT_MODEL = os.getenv("SCOUT_MODEL", "gemini-2.5-flash")
 WRITER_MODEL = os.getenv("WRITER_MODEL", "gemini-2.5-flash")
-WRITER_FALLBACK_MODEL = os.getenv("WRITER_FALLBACK_MODEL", "gemini-2.5-flash-lite")
+WRITER_FALLBACK_MODEL = os.getenv("WRITER_FALLBACK_MODEL", "gemini-3.5-flash-lite")
 TTS_MODEL = os.getenv("TTS_MODEL", "gemini-2.5-flash-preview-tts")
 
 # --- Free-tier request budget ---
@@ -40,25 +40,22 @@ TTS_MAX_SEGMENTS = int(os.getenv("TTS_MAX_SEGMENTS", "8"))
 FILES_POLL_INTERVAL_SECONDS = float(os.getenv("FILES_POLL_INTERVAL_SECONDS", "2"))
 FILES_POLL_TIMEOUT_SECONDS = float(os.getenv("FILES_POLL_TIMEOUT_SECONDS", "180"))
 
-# Bump when prompts change (invalidates the scout/writer disk cache)
-PROMPT_VERSION = "phase1-v1"
+# Bump per agent when its prompt changes (invalidates that agent's disk cache)
+SCOUT_PROMPT_VERSION = "phase1-v1"
+WRITER_PROMPT_VERSION = "phase2-v1"
 
-# --- Persona voices (Gemini prebuilt TTS voices) ---
-PERSONA_VOICE_MAP = {
-    "hype": "Fenrir",
+# --- Booth voices (Gemini prebuilt TTS voices) ---
+BOOTH_VOICE_MAP = {
+    "play_by_play": "Fenrir",
     "analytical": "Charon",
     "roaster": "Puck",
 }
 
-PERSONA_STYLE_DIRECTIVE = {
-    "hype": "Say like an explosive streetball hype-man announcer, maximum energy:",
-    "analytical": "Say like a calm, measured ESPN-style tactical analyst:",
-    "roaster": "Say like a savage, sarcastic trash-talking commentator:",
-}
+BOOTH_STYLE_DIRECTIVE = "Voice a live two-person basketball commentary booth with natural turn-taking:"
 
 # --- Edge-TTS fallback voices (used when Gemini TTS quota is exhausted) ---
-EDGE_VOICE_MAP = {
-    "hype": "en-US-ChristopherNeural",
+EDGE_BOOTH_VOICE_MAP = {
+    "play_by_play": "en-US-ChristopherNeural",
     "analytical": "en-US-SteffanNeural",
     "roaster": "en-US-GuyNeural",
 }

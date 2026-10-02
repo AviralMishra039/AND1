@@ -3,6 +3,7 @@ from langgraph.graph import StateGraph, END
 from agents.analyst_agent import compute_game_metrics
 from agents.scout_agent import analyze_video
 from agents.writer_agent import generate_commentary
+from observability.tracing import observe, tag_trace
 
 class GameState(TypedDict):
     events: List[Dict]                    # From Scout Agent
@@ -44,7 +45,11 @@ def build_writer_input(state: GameState) -> GameState:
     if len(events) == 0:
         context = "No major plays detected in this run. It's a quiet stretch."
     else:
-        context = f"The momentum is {momentum}. There's been {streak} major scoring plays recently. The crowd is feeling it."
+        dominant = state.get("dominant_play_type", "none")
+        context = (
+            f"The momentum is {momentum}. There's been {streak} major scoring plays recently. "
+            f"The most frequent play type is {dominant}. The crowd is feeling it."
+        )
         
     state["commentary_context"] = context
     
@@ -62,6 +67,22 @@ def call_writer_agent(state: GameState) -> GameState:
     writer_output = generate_commentary(writer_input)
     state["commentary_segments"] = writer_output.get("commentary_segments", [])
     return state
+
+@observe(name="pipeline")
+def run_pipeline(video_path: str, persona: str) -> GameState:
+    """Run the full pipeline (scout -> analyst -> writer) as a single traced unit."""
+    tag_trace(input={"mode": "batch", "color_persona": persona, "video_path": video_path})
+    workflow = build_graph()
+    final_state = workflow.invoke({
+        "video_path": video_path,
+        "selected_persona": persona,
+    })
+    tag_trace(output={
+        "events": len(final_state.get("events", [])),
+        "segments": len(final_state.get("commentary_segments", [])),
+    })
+    return final_state
+
 
 def build_graph() -> StateGraph:
     """Build and compile the LangGraph workflow."""

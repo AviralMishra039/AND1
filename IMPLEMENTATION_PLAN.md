@@ -99,7 +99,7 @@ hoopvoice-ai/
 - Wire cache + mock mode.
 - **Acceptance:** same clip → richer event list than the old frame sampler; 1 API call; cache hit on rerun.
 
-### Phase 2 — Booth Mode + Gemini TTS (D3, D4)
+### Phase 2 — Booth Mode + Gemini TTS (D3, D4) — ✅ COMPLETE (two-voice banter in 5 calls/run; word-budget enforced across turns; edge-tts fallback verified via simulated outage)
 - Extend `schemas.py`: `Turn{speaker, text}` and `BoothSegment{timestamp_seconds, turns[], duration_hint_seconds}`.
 - Rewrite `writer_agent.py`: prompt gets momentum/streak context + event list, outputs banter turns; hard word-budget math stays (now split across two mouths).
 - Build `tts_engine.py`: single-speaker and `multi_speaker_voice_config` paths → PCM→WAV → cache → edge-tts fallback on quota errors.
@@ -107,7 +107,7 @@ hoopvoice-ai/
 - UI: persona picker becomes "Color Commentator: Analyst | Roaster" (PBP Hype voice is constant).
 - **Acceptance:** output video has two distinct voices riffing; total calls ≤ budget; fallback fires correctly when quota is simulated.
 
-### Phase 3 — Observability + Eval Harness (D5) — *before* Live
+### Phase 3 — Observability + Eval Harness (D5) — ✅ COMPLETE (scorecard verified; judge live on gemini-3.5-flash-lite; Langfuse experiment mode ready, activates with LANGFUSE_* keys)
 - `observability/tracing.py`: Langfuse init from env; `@observe()` on scout/writer/TTS/assemble; one trace per run, tagged with mode (batch/live) + color persona.
 - `evals/`:
   - **Golden dataset:** 3–5 short clips + hand-labeled events (timestamp ± type).

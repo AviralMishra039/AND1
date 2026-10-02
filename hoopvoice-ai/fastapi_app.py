@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from utils.schemas import ScoutOutput, WriterOutput
-from state.graph import build_graph
+from utils.schemas import BoothOutput, ScoutOutput
+from state.graph import run_pipeline
 from engine.video_engine import assemble_final_video
 
 app = FastAPI(title="HoopVoice AI API")
@@ -49,18 +49,10 @@ async def generate_commentary(
     with open(video_path, "wb") as buffer:
         shutil.copyfileobj(video_file.file, buffer)
         
-    workflow = build_graph()
-    state_dict = {
-        "video_path": video_path,
-        "selected_persona": persona
-    }
-    
     print("Starting LangGraph workflow execution...")
     try:
-        # Run graph synchronously 
-        final_output = workflow.invoke(state_dict)
-        final_state = final_output
-        
+        final_state = run_pipeline(video_path, persona)
+
         events = final_state.get("events", [])
         commentary_segments = final_state.get("commentary_segments", [])
         

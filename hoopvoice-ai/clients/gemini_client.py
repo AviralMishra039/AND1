@@ -192,18 +192,9 @@ def generate_content(model, contents, config=None, area="default", cache_key=Non
     raise last_error
 
 
-def generate_speech(text, voice_name, style_directive="", model=TTS_MODEL, area="tts"):
-    """Gemini native TTS. Returns (pcm_bytes, mime_type). Raises on failure."""
+def _tts_generate(prompt, tts_config, model=TTS_MODEL, area="tts"):
+    """Shared TTS call: budget guard + retry on transient/empty responses."""
     client = get_client()
-    prompt = f"{style_directive} {text}".strip()
-    tts_config = types.GenerateContentConfig(
-        response_modalities=["AUDIO"],
-        speech_config=types.SpeechConfig(
-            voice_config=types.VoiceConfig(
-                prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice_name)
-            )
-        ),
-    )
     last_error = None
     for attempt in range(1, RETRY_ATTEMPTS + 1):
         try:
@@ -235,3 +226,49 @@ def generate_speech(text, voice_name, style_directive="", model=TTS_MODEL, area=
                 )
                 time.sleep(sleep_for)
     raise last_error
+
+
+def generate_speech(text, voice_name, style_directive="", model=TTS_MODEL, area="tts"):
+    """Gemini native single-speaker TTS. Returns (pcm_bytes, mime_type)."""
+    prompt = f"{style_directive} {text}".strip()
+    tts_config = types.GenerateContentConfig(
+        response_modalities=["AUDIO"],
+        speech_config=types.SpeechConfig(
+            voice_config=types.VoiceConfig(
+                prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice_name)
+            )
+        ),
+    )
+    return _tts_generate(prompt, tts_config, model=model, area=area)
+
+
+def generate_speech_multi(speaker_voices, transcript, style_directive="", model=TTS_MODEL, area="tts"):
+    """Gemini native multi-speaker TTS (exactly 2 speakers).
+
+    speaker_voices: list of (speaker_label, voice_name) pairs; labels must match the transcript.
+    Returns (pcm_bytes, mime_type).
+    """
+    prompt = f"{style_directive}\n{transcript}".strip()
+    tts_config = types.GenerateContentConfig(
+        response_modalities=["AUDIO"],
+        speech_config=types.SpeechConfig(
+            multi_speaker_voice_config=types.MultiSpeakerVoiceConfig(
+                speaker_voice_configs=[
+                    types.SpeakerVoiceConfig(
+                        speaker=label,
+                        voice_config=types.VoiceConfig(
+                            prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice)
+                        ),
+                    )
+                    for label, voice in speaker_voices
+                ]
+            )
+        ),
+    )
+    return _tts_generate(prompt, tts_config, model=model, area=area)
+
+
+def request_summary() -> dict:
+    """Snapshot of Gemini API calls made this process, per budget area."""
+    with _request_lock:
+        return dict(_request_counts)

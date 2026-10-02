@@ -7,27 +7,33 @@ from pathlib import Path
 
 from pydub import AudioSegment
 
-from clients.gemini_client import generate_speech
+from clients.gemini_client import generate_speech_multi
 from observability.tracing import observe
 from utils.config import (
+    BOOTH_STYLE_DIRECTIVE,
+    BOOTH_VOICE_MAP,
     CACHE_ENABLED,
     CACHE_DIR,
-    EDGE_VOICE_MAP,
+    EDGE_BOOTH_VOICE_MAP,
     MOCK_LLM,
-    PERSONA_STYLE_DIRECTIVE,
-    PERSONA_VOICE_MAP,
     TTS_CHANNELS,
     TTS_MODEL,
     TTS_SAMPLE_RATE,
     TTS_SAMPLE_WIDTH,
     ensure_dirs,
 )
-from utils.helpers import calculate_audio_duration, strip_ssml
+from utils.helpers import strip_ssml
+
+PBP_LABEL = "Speaker 1"
+COLOR_LABEL = "Speaker 2"
+EDGE_TURN_GAP_MS = 120
+WORDS_PER_SECOND = 2.5
 
 
-def _tts_cache_path(text: str, voice: str, directive: str) -> Path:
-    key = hashlib.sha256(f"{text}|{voice}|{directive}|{TTS_MODEL}".encode("utf-8")).hexdigest()[:32]
-    return CACHE_DIR / f"tts_{key}.wav"
+def _segment_cache_path(transcript: str, color_persona: str) -> Path:
+    voices = f"{BOOTH_VOICE_MAP['play_by_play']}|{BOOTH_VOICE_MAP.get(color_persona, 'Charon')}|{TTS_MODEL}"
+    key = hashlib.sha256(f"{transcript}|{voices}".encode("utf-8")).hexdigest()[:32]
+    return CACHE_DIR / f"booth_{key}.wav"
 
 
 def _write_pcm_wav(pcm: bytes, path: str, sample_rate: int = TTS_SAMPLE_RATE):
@@ -55,63 +61,113 @@ def _sample_rate_from_mime(mime: str) -> int:
     return TTS_SAMPLE_RATE
 
 
-def _edge_tts(text: str, persona: str, output_path: str):
-    """Free Edge-TTS fallback (writes mp3, converts to wav)."""
-    clean_text = text.replace("'", "").replace('"', "")
-    voice = EDGE_VOICE_MAP.get(persona, "en-US-ChristopherNeural")
+def _estimate_duration(turns) -> float:
+    words = sum(len(str(t.get("text", "")).split()) for t in turns)
+    return (words / WORDS_PER_SECOND) + 0.3
 
-    temp_mp3 = str(Path(output_path).with_suffix(".mp3"))
-    cmd = [
-        sys.executable, "-m", "edge_tts",
-        "--voice", voice,
-        "--text", clean_text,
-        "--write-media", temp_mp3,
-    ]
-    try:
-        subprocess.run(cmd, check=True)
-        AudioSegment.from_file(temp_mp3).export(output_path, format="wav")
-    finally:
-        if Path(temp_mp3).exists():
-            Path(temp_mp3).unlink()
+
+def _edge_render(turns, color_persona: str, output_path: str):
+    """Free Edge-TTS fallback: render each turn with a distinct voice, concatenate."""
+    parts = []
+    temp_dir = Path(output_path).parent
+    for idx, turn in enumerate(turns):
+        text = strip_ssml(str(turn.get("text", ""))).replace("'", "").replace('"', "")
+        if not text:
+            continue
+        if turn.get("speaker") == "play_by_play":
+            voice = EDGE_BOOTH_VOICE_MAP["play_by_play"]
+        else:
+            voice = EDGE_BOOTH_VOICE_MAP.get(color_persona, EDGE_BOOTH_VOICE_MAP["analytical"])
+
+        temp_mp3 = temp_dir / f"edge_turn_{idx}.mp3"
+        cmd = [
+            sys.executable, "-m", "edge_tts",
+            "--voice", voice,
+            "--text", text,
+            "--write-media", str(temp_mp3),
+        ]
+        try:
+            subprocess.run(cmd, check=True)
+            seg = AudioSegment.from_file(str(temp_mp3))
+            parts.append(
+                seg.set_frame_rate(TTS_SAMPLE_RATE)
+                .set_channels(TTS_CHANNELS)
+                .set_sample_width(TTS_SAMPLE_WIDTH)
+            )
+        finally:
+            if temp_mp3.exists():
+                temp_mp3.unlink()
+
+    if not parts:
+        raise RuntimeError("Edge-TTS produced no audio for this segment")
+
+    gap = AudioSegment.silent(duration=EDGE_TURN_GAP_MS, frame_rate=TTS_SAMPLE_RATE)
+    gap = gap.set_channels(TTS_CHANNELS).set_sample_width(TTS_SAMPLE_WIDTH)
+    mixed = parts[0]
+    for part in parts[1:]:
+        mixed += gap + part
+    mixed.export(output_path, format="wav")
 
 
 @observe(name="tts")
-def generate_voice_audio(text: str, persona: str, output_path: str) -> str:
-    """Render one commentary line to a WAV file.
+def render_segment(turns, color_persona: str, output_path: str) -> str:
+    """Render one booth segment (list of {speaker, text} turns) to a single WAV.
 
-    Order: disk cache -> Gemini native TTS -> Edge-TTS fallback -> silence.
+    Order: disk cache -> Gemini multi-speaker TTS -> Edge-TTS fallback -> silence.
     """
-    clean_text = strip_ssml(text)
-    voice = PERSONA_VOICE_MAP.get(persona, PERSONA_VOICE_MAP["analytical"])
-    directive = PERSONA_STYLE_DIRECTIVE.get(persona, "")
+    clean_turns = [
+        {
+            "speaker": t.get("speaker", "play_by_play"),
+            "text": strip_ssml(str(t.get("text", ""))).strip(),
+        }
+        for t in turns
+        if str(t.get("text", "")).strip()
+    ]
+    if not clean_turns:
+        _write_silent_wav(output_path, 1.0)
+        return output_path
 
-    cache_file = _tts_cache_path(clean_text, voice, directive)
+    if color_persona not in BOOTH_VOICE_MAP:
+        color_persona = "analytical"
+
+    transcript = "\n".join(
+        f"{PBP_LABEL if t['speaker'] == 'play_by_play' else COLOR_LABEL}: {t['text']}"
+        for t in clean_turns
+    )
+    cache_file = _segment_cache_path(transcript, color_persona)
 
     if CACHE_ENABLED and cache_file.exists():
         shutil.copyfile(cache_file, output_path)
-        print(f"[tts] Cache hit for persona '{persona}'")
+        print("[tts] Cache hit for booth segment")
         return output_path
 
     if MOCK_LLM:
-        _write_silent_wav(output_path, calculate_audio_duration(clean_text))
+        _write_silent_wav(output_path, _estimate_duration(clean_turns))
         return output_path
 
-    # 1. Gemini native TTS (single speaker)
+    # 1. Gemini multi-speaker TTS (both voices in one call)
     try:
-        pcm, mime = generate_speech(clean_text, voice, directive)
+        pcm, mime = generate_speech_multi(
+            speaker_voices=[
+                (PBP_LABEL, BOOTH_VOICE_MAP["play_by_play"]),
+                (COLOR_LABEL, BOOTH_VOICE_MAP[color_persona]),
+            ],
+            transcript=transcript,
+            style_directive=BOOTH_STYLE_DIRECTIVE,
+        )
         _write_pcm_wav(pcm, output_path, _sample_rate_from_mime(mime))
         if CACHE_ENABLED:
             ensure_dirs()
             shutil.copyfile(output_path, str(cache_file))
         return output_path
     except Exception as e:
-        print(f"Gemini TTS failed: {e}. Falling back to Edge-TTS.")
+        print(f"Gemini multi-speaker TTS failed: {e}. Falling back to Edge-TTS.")
 
-    # 2. Edge-TTS fallback
+    # 2. Edge-TTS fallback (per-turn voices)
     try:
-        _edge_tts(clean_text, persona, output_path)
+        _edge_render(clean_turns, color_persona, output_path)
     except Exception as e:
         print(f"Edge-TTS also failed: {e}. Writing silence.")
-        _write_silent_wav(output_path, 2.0)
+        _write_silent_wav(output_path, _estimate_duration(clean_turns))
 
     return output_path
