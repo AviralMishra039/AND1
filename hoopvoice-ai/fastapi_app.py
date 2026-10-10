@@ -1,7 +1,8 @@
+import json
 import os
 import shutil
 import time
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -9,8 +10,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from utils.schemas import BoothOutput, ScoutOutput
+from utils.config import REPO_ROOT
 from state.graph import run_pipeline
 from engine.video_engine import assemble_final_video
+from live.live_session import run_live_session
 
 app = FastAPI(title="HoopVoice AI API")
 
@@ -74,6 +77,34 @@ async def generate_commentary(
     except Exception as e:
         print(f"Pipeline failed: {e}")
         return {"error": str(e)}
+
+@app.websocket("/ws/live")
+async def live_websocket(websocket: WebSocket):
+    """Bridge the browser to a Gemini Live commentary session."""
+    await websocket.accept()
+    try:
+        start = json.loads(await websocket.receive_text())
+        if start.get("type") != "start":
+            await websocket.send_text(json.dumps({
+                "type": "error",
+                "message": "Expected a 'start' message first.",
+            }))
+            return
+        persona = start.get("persona", "play_by_play")
+        await run_live_session(websocket, persona)
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        try:
+            await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
+        except Exception:
+            pass
+
+
+# Serve the web frontend at the root (mounted last, after the API routes above)
+FRONTEND_DIR = REPO_ROOT / "frontend"
+app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+
 
 if __name__ == "__main__":
     import uvicorn

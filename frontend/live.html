@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoopVoice AI | Live Booth</title>
+    <link rel="stylesheet" href="style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@800;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body class="app-body">
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="app.html" class="nav-btn btn-white" style="text-decoration: none;">← Back to Studio</a>
+        </div>
+        <div class="nav-center">
+            <h1 class="logo"><span>✺</span> HOOPVOICE-AI</h1>
+        </div>
+        <div class="nav-right">
+            <a href="index.html" class="nav-btn btn-outline" style="text-decoration: none;">Home</a>
+        </div>
+    </nav>
+
+    <main class="dashboard-section">
+        <div class="dashboard-header">
+            <h2>Live Commentary Booth 🎙</h2>
+            <p>Stream a game live and let the AI call it in real time. Short demo sessions (~90s cap, one at a time).</p>
+        </div>
+
+        <section class="interaction-grid dashboard-grid">
+            <!-- Source -->
+            <div class="card card-dark">
+                <div class="card-header">
+                    <span class="step-label">Source</span>
+                    <div class="line"></div>
+                </div>
+                <div class="card-body row-body">
+                    <h3>What are we<br>watching?</h3>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <span>Webcam</span>
+                            <input type="radio" name="live-source" value="webcam" checked>
+                        </label>
+                        <label class="radio-option">
+                            <span>Video file (replay)</span>
+                            <input type="radio" name="live-source" value="file">
+                        </label>
+                    </div>
+                    <div class="upload-controls" id="file-source" style="display: none; margin-top: 1rem;">
+                        <label for="live-file" class="upload-btn">Select Video File</label>
+                        <input type="file" id="live-file" accept="video/mp4" hidden>
+                        <span id="live-file-name" class="file-name">No file selected</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voice -->
+            <div class="card card-orange">
+                <div class="card-header">
+                    <span class="step-label">Voice</span>
+                    <div class="line line-orange"></div>
+                </div>
+                <div class="card-body row-body">
+                    <h3>Who's on the<br>call tonight?</h3>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <span>The Hype Man</span>
+                            <input type="radio" name="live-persona" value="play_by_play" checked>
+                        </label>
+                        <label class="radio-option">
+                            <span>The Analyst</span>
+                            <input type="radio" name="live-persona" value="analytical">
+                        </label>
+                        <label class="radio-option">
+                            <span>The Roaster</span>
+                            <input type="radio" name="live-persona" value="roaster">
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Go Live -->
+            <div class="card card-light" id="live-card">
+                <div class="card-header">
+                    <span class="step-label">Go Live</span>
+                    <div class="line line-light"></div>
+                </div>
+                <div class="card-body generate-body">
+                    <h3>Go Live → 🎙</h3>
+                    <p class="status-text" id="live-status">Pick a source and hit Go Live</p>
+                    <video id="live-preview" autoplay muted playsinline
+                        style="display: none; width: 100%; max-height: 300px; background: #000; border-radius: 10px; object-fit: cover;"></video>
+                    <p id="live-captions"
+                        style="display: none; margin-top: 1rem; min-height: 2.5em; font-style: italic; color: #555;"></p>
+                    <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center; align-items: center;">
+                        <button id="go-live-btn"
+                            style="background: var(--orange); color: #fff; border: none; padding: 0.8rem 2rem; border-radius: 10px; font-weight: 700; font-family: inherit; font-size: 1rem; cursor: pointer;">Go
+                            Live <span class="arrow">→</span></button>
+                        <button id="stop-live-btn" class="btn-outline"
+                            style="display: none; border: 1px solid #ddd; color: var(--dark); padding: 0.8rem 2rem; border-radius: 10px; background: none; font-family: inherit; font-weight: 700; cursor: pointer;">Stop</button>
+                        <span id="live-timer" style="font-weight: 600; color: #888;">0s</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="live.js"></script>
+</body>
+
+</html>

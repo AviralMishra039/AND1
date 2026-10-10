@@ -12,6 +12,10 @@ for _candidate in [Path.cwd() / ".env", BASE_DIR / ".env", REPO_ROOT / ".env"]:
         load_dotenv(_candidate)
         break
 
+# Compatibility: accept LANGFUSE_BASE_URL as the host if LANGFUSE_HOST is unset
+if os.getenv("LANGFUSE_BASE_URL") and not os.getenv("LANGFUSE_HOST"):
+    os.environ["LANGFUSE_HOST"] = os.getenv("LANGFUSE_BASE_URL")
+
 # --- Feature flags ---
 MOCK_LLM = os.getenv("MOCK_LLM", "0") == "1"
 CACHE_ENABLED = os.getenv("CACHE_ENABLED", "1") == "1"
@@ -29,6 +33,8 @@ SCOUT_MODEL = os.getenv("SCOUT_MODEL", "gemini-2.5-flash")
 WRITER_MODEL = os.getenv("WRITER_MODEL", "gemini-2.5-flash")
 WRITER_FALLBACK_MODEL = os.getenv("WRITER_FALLBACK_MODEL", "gemini-3.5-flash-lite")
 TTS_MODEL = os.getenv("TTS_MODEL", "gemini-2.5-flash-preview-tts")
+LIVE_MODEL = os.getenv("LIVE_MODEL", "gemini-2.5-flash-native-audio-latest")
+LIVE_MAX_SESSION_SECONDS = int(os.getenv("LIVE_MAX_SESSION_SECONDS", "90"))
 
 # --- Free-tier request budget ---
 RETRY_ATTEMPTS = int(os.getenv("RETRY_ATTEMPTS", "3"))
